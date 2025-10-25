@@ -9,8 +9,13 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ========================================================
+// 🌐 MIDDLEWARE
+// ========================================================
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
+
+// Static folder for uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ========================================================
@@ -51,9 +56,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
+// Helper: cleanup uploaded files if needed
 const cleanupFiles = (files) => {
   if (files && Array.isArray(files)) {
     files.forEach((file) => {
@@ -69,6 +75,19 @@ const cleanupFiles = (files) => {
 // ========================================================
 // 🧱 ROUTES
 // ========================================================
+
+// ✅ Default route (Home)
+app.get("/", (req, res) => {
+  res.send(`
+    <div style="font-family:sans-serif;text-align:center;margin-top:50px;color:#333;">
+      <h1 style="font-size:2.5em;"> Shovi, your API is running under safer hands!!! 💪</h1>
+      <p style="font-size:1.1em;color:#555;margin-top:10px;">
+        Everything is secure, smooth, and ready to roll.
+      </p>
+      
+  `);
+});
+
 
 // 1️⃣ Get all projects
 app.get("/projects", async (req, res) => {
@@ -216,7 +235,6 @@ app.put("/gallery/:id", (req, res, next) => {
     const oldPath = path.join(__dirname, oldImage.recordset[0].ImagePath);
     const newPath = file ? path.join("uploads", "gallery", file.filename) : null;
 
-    // Update the record
     let query = `UPDATE tbl_Gallery_Images SET `;
     if (projectId) query += `ProjectID = @ProjectID, `;
     if (newPath) query += `ImagePath = @ImagePath, `;
@@ -240,6 +258,15 @@ app.put("/gallery/:id", (req, res, next) => {
     res.status(500).json({ error: "Server error during update." });
   }
 });
+
+// ========================================================
+// 🖥️ SERVE FRONTEND (Optional for React Build)
+// ========================================================
+// Uncomment this if you have a React frontend build folder
+// app.use(express.static(path.join(__dirname, "../client/dist")));
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+// });
 
 // ========================================================
 // 🚀 START SERVER
